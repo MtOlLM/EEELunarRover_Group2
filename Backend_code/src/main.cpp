@@ -34,33 +34,21 @@ float GeomagneticFieldStrength;
 const float Magneticsensitivity = 3;
 
 // ================= Ultrasound =================
-int UltrasonicThreshold =100;
+int UltrasonicThreshold = 100;
 
 // ================= Radio Age =================
 const int RadioPin = 0;
-const unsigned long bitDelay = 1667;
-const unsigned long halfBitDelay = 833;
 
 char buffer[4];
 int bufferIndex = 0;
-
 String currentAge = "---";
 
-//0->wait for the start bit
-//1->verify the start bit
-//2->sampling
-int RadioState = 0; 
-
-unsigned long radioTimer = 0;
-int bitCounter = 0;
-char receivedChar = 0;
-int currentBitIndex = 0;
 // ================= IR =================
-const int IRPin = 1;
-const int IRDetectionThreshold = 3;
+const int IRPin = 8;
+const int IRDetectionThreshold = 2;
 String IRPresence = "ABSENT";
 unsigned long lastIRWindowStart = 0;
-const unsigned long IR_WINDOW_DURATION = 100;
+const unsigned long IR_WINDOW_DURATION = 300;
 int irPulseCount = 0;
 int lastIRPinStatus = LOW;
 
@@ -79,13 +67,13 @@ void roverStop()
 
 void setLeftMotor(bool forward, int speed)
 {
-  digitalWrite(LEFT_DIR, forward ? LOW : HIGH);
+  digitalWrite(LEFT_DIR, forward ? HIGH : LOW);
   analogWrite(LEFT_PWM, speed);
 }
 
 void setRightMotor(bool forward, int speed)
 {
-  digitalWrite(RIGHT_DIR, forward ? HIGH : LOW);
+  digitalWrite(RIGHT_DIR, forward ? LOW : HIGH);
   analogWrite(RIGHT_PWM, speed);
 }
 
@@ -105,15 +93,15 @@ void handleBackward()
 
 void handleLeft()
 {
-  setLeftMotor(true, ROTATE_SPEED);
-  setRightMotor(false, ROTATE_SPEED);
+  setLeftMotor(false, ROTATE_SPEED);
+  setRightMotor(true, ROTATE_SPEED);
   server.send(200, "text/plain", "LEFT");
 }
 
 void handleRight()
 {
-  setLeftMotor(false, ROTATE_SPEED);
-  setRightMotor(true, ROTATE_SPEED);
+  setLeftMotor(true, ROTATE_SPEED);
+  setRightMotor(false, ROTATE_SPEED);
   server.send(200, "text/plain", "RIGHT");
 }
 
@@ -125,15 +113,15 @@ void handleStop()
 
 void handleForwardLeft()
 {
-  setLeftMotor(true, MOTOR_SPEED);
-  setRightMotor(true, ROTATE_SPEED);
+  setLeftMotor(true, ROTATE_SPEED);
+  setRightMotor(true, MOTOR_SPEED);
   server.send(200, "text/plain", "FORWARD LEFT");
 }
 
 void handleForwardRight()
 {
-  setLeftMotor(true, ROTATE_SPEED);
-  setRightMotor(true, MOTOR_SPEED);
+  setLeftMotor(true, MOTOR_SPEED);
+  setRightMotor(true, ROTATE_SPEED);
   server.send(200, "text/plain", "FORWARD RIGHT");
 }
 // ================= WEB HANDLERS =================
@@ -344,63 +332,30 @@ void IRUpdate(){
 
 }
 
-void AgeUpdate(){
-  unsigned long currentMicros = micros();
 
-  switch (RadioState) {
-    case 0:
-      if (digitalRead(RadioPin) == LOW) {
-        radioTimer = currentMicros;
-        RadioState = 1;
-      }
-      break;
-
-    case 1:
-      if (currentMicros - radioTimer >= halfBitDelay) {
-        if (digitalRead(RadioPin) == LOW) {
-          radioTimer += halfBitDelay; 
-          bitCounter = 0;
-          receivedChar = 0;
-          RadioState = 2;
-        } else {
-          RadioState = 0;
+void AgeUpdate() {
+  while (Serial1.available() > 0) {
+    char receivedChar = Serial1.read();
+    if (receivedChar == '#') {
+      bufferIndex = 0;
+      buffer[bufferIndex] = receivedChar;
+      bufferIndex++;
+    } 
+    else if (bufferIndex > 0 && bufferIndex < 4) {
+      if (receivedChar >= '0' && receivedChar <= '9') {
+        buffer[bufferIndex] = receivedChar;
+        bufferIndex++;
+        if (bufferIndex == 4) {
+          bufferIndex = 0;
+          currentAge = String(buffer[1]) + "." + String(buffer[2]) + String(buffer[3]) + " billion years";
         }
+      } else {
+        bufferIndex = 0;
       }
-      break;
-
-    case 2:
-      if (currentMicros - radioTimer >= bitDelay) {
-        radioTimer += bitDelay; 
-        int bitVal = digitalRead(RadioPin);
-        if (bitVal == HIGH) {
-          receivedChar |= (1 << bitCounter);
-        }
-        bitCounter++;
-        if (bitCounter >= 8) {
-          if (receivedChar == '#') {
-            bufferIndex = 0;
-            buffer[bufferIndex] = receivedChar;
-            bufferIndex++;
-          } 
-          else if (bufferIndex > 0 && bufferIndex < 4) {
-            if (receivedChar >= '0' && receivedChar <= '9') {
-              buffer[bufferIndex] = receivedChar;
-              bufferIndex++;
-              if (bufferIndex == 4) {
-                bufferIndex = 0;
-                currentAge = String(buffer[1]) + "." + String(buffer[2]) + String(buffer[3]) + " billion years";
-              }
-            } else {
-              bufferIndex = 0;
-            }
-          }
-          RadioState = 0;
-        }
-      }
-      break;
+    }
   }
-
 }
+
 
 // ================= SETUP =================
 
@@ -421,7 +376,7 @@ void setup(){
   pinMode(IRPin, INPUT);
 
   Serial.begin(9600);
-
+  Serial1.begin(600);
 
   while (!Serial && millis() < 10000);
 
