@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
 }
 
 class DPadScreen extends StatefulWidget {
-  const DPadScreen({Key? key}) : super(key: key);
+  const DPadScreen({super.key});
 
   @override
   State<DPadScreen> createState() => _DPadScreenState();
@@ -416,7 +416,7 @@ Future<void> _requestSensorData() async {
                         icon: const Icon(Icons.compass_calibration, size: 12),
                         label: const Text("CALIBRATE MAG", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber.withOpacity(0.08),
+                          backgroundColor: Colors.amber.withValues(alpha: 0.08),
                           foregroundColor: Colors.amberAccent,
                           side: const BorderSide(color: Colors.amber, width: 1),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -433,7 +433,7 @@ Future<void> _requestSensorData() async {
                           : const Icon(Icons.radar, size: 12),
                         label: Text(_isIrMeasuring ? "MEASURING..." : "REQUEST IR", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pink.withOpacity(0.08),
+                          backgroundColor: Colors.pink.withValues(alpha: 0.08),
                           foregroundColor: Colors.pinkAccent,
                           side: const BorderSide(color: Colors.pink, width: 1),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -561,14 +561,14 @@ class CustomDPad extends StatelessWidget {
   final DPadDirection? activeDirection;
 
   const CustomDPad({
-    Key? key,
+    super.key,
     required this.onDirectionHoldStart,
     required this.onDirectionHoldEnd,
     this.size = 240.0,
     this.buttonColor = Colors.grey,
     this.iconColor = Colors.white,
     this.activeDirection,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
