@@ -230,6 +230,7 @@ void MagCalibration()
 {
   setupMagneticSensor();
   GeomagneticFieldStrength = bmm350.getGeomagneticData().float_z;
+  server.send(200,"text/plain","Calibration Complete");
 }
 
 double IR_312_probability(double r){
