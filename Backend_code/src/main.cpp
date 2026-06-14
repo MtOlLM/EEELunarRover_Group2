@@ -272,7 +272,7 @@ void IRMeasurement()
   prob_312 = IR_312_probability(rate);
   prob_547 = 100.0 - prob_312;
   String irData = "{";
-  irData += "\"irRate\":\"" + String(rate) + "\",";
+  irData += "\"irRate\":\"" + String(rate) + " p/s\",";
   irData += "\"prob_312\":\"" + String(prob_312) + "%\",";
   irData += "\"prob_547\":\"" + String(prob_547) + "%\"";
   irData += "}";

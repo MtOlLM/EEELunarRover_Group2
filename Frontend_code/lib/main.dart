@@ -42,7 +42,7 @@ class _DPadScreenState extends State<DPadScreen> {
   String _magDirection = "WEAK";
 
   String _irPresence = "ABSENT";
-  double _irPulseRate = 0.0; 
+  String _irPulseRate = "0.00 p/s"; 
   
   // IR Probability fields mapped from Arduino logic
   String _prob312 = "0.0%";
@@ -95,9 +95,8 @@ class _DPadScreenState extends State<DPadScreen> {
 
       // 3. Infrared Mappings
       if (sensor.containsKey("irDetection")) _irPresence = sensor["irDetection"] ?? "ABSENT";
-      if (sensor.containsKey("irRate")) {
-        _irPulseRate = double.tryParse(sensor["irRate"].toString()) ?? 0.0;
-      }
+      if (sensor.containsKey("irRate")) _irPulseRate = sensor["irRate"]?.toString() ?? "0.00 p/s";
+      
       
       // Captured probability elements calculated by your Arduino
       if (sensor.containsKey("prob_312")) {
@@ -164,7 +163,7 @@ class _DPadScreenState extends State<DPadScreen> {
           "Cache-Control": "no-cache"
         },
       ).timeout(
-        const Duration(milliseconds: 200), // Hard cutoff: stops "Future not completed" hang
+        const Duration(milliseconds: 500), // Hard cutoff: stops "Future not completed" hang
         onTimeout: () {
           debugPrint("Motor command timed out! Arduino is likely blocked in a hardware loop.");
           _isSendingCommand = false; // Reset lock locally so the next keypress works
@@ -245,7 +244,7 @@ Future<void> _requestSensorData() async {
         Uri.parse('$_roverBaseUrl/irRate'),
         headers: {"Connection": "close"},
       ).timeout(
-        const Duration(seconds: 4), // IR sampling logic takes longer on Arduino
+        const Duration(seconds: 6), // IR sampling logic takes longer on Arduino
         onTimeout: () {
           setState(() { _isIrMeasuring = false; });
           return http.Response('Timeout', 408);
@@ -476,7 +475,7 @@ Future<void> _requestSensorData() async {
                   titleColor: Colors.pinkAccent,
                   children: [
                     _buildTelemetryLine("PRESENCE", _irPresence, _irPresence == "PRESENT" ? Colors.greenAccent : Colors.redAccent),
-                    _buildTelemetryLine("PULSE RATE", "${_irPulseRate.toStringAsFixed(2)} p/s", Colors.white),
+                    _buildTelemetryLine("PULSE RATE", _irPulseRate, Colors.white),
                     const Divider(color: Colors.white10, height: 20),
                     const Text(
                       "INFRARED FREQUENCY DISTRIBUTION:", 
