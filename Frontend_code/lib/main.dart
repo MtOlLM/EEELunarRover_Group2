@@ -188,7 +188,7 @@ Future<void> _requestSensorData() async {
         Uri.parse('$_roverBaseUrl/sensorData'),
         headers: {"Connection": "close"},
       ).timeout(
-        const Duration(milliseconds: 400), // Bumped slightly for debugging visibility
+        const Duration(milliseconds: 400),
         onTimeout: () {
           debugPrint("❌ NETWORK TIMEOUT: Arduino took too long to reply to Flutter.");
           return http.Response('Timeout', 408);
